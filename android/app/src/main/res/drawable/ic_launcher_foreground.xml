@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="0.55"
+        android:scaleY="0.55"
+        android:translateX="24.3"
+        android:translateY="24.3">
+        <!-- Stopwatch body -->
+        <path
+            android:fillColor="#00000000"
+            android:strokeColor="#06B6D4"
+            android:strokeWidth="7"
+            android:strokeLineCap="round"
+            android:pathData="M 54,22 C 34.1,22 18,38.1 18,58 C 18,77.9 34.1,94 54,94 C 73.9,94 90,77.9 90,58 C 90,38.1 73.9,22 54,22 Z" />
+        <!-- Top button -->
+        <path
+            android:fillColor="#38BDF8"
+            android:pathData="M 48,10 L 60,10 L 60,18 L 48,18 Z" />
+        <path
+            android:fillColor="#38BDF8"
+            android:pathData="M 44,6 L 64,6 L 64,10 L 44,10 Z" />
+        <!-- Side lap button -->
+        <path
+            android:fillColor="#F59E0B"
+            android:pathData="M 78,22 L 86,30 L 83,33 L 75,25 Z" />
+        <!-- Timer dial hand -->
+        <path
+            android:fillColor="#00000000"
+            android:strokeColor="#10B981"
+            android:strokeWidth="5"
+            android:strokeLineCap="round"
+            android:pathData="M 54,58 L 70,42" />
+        <!-- Center pivot dot -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M 54,53 C 51.2,53 49,55.2 49,58 C 49,60.8 51.2,63 54,63 C 56.8,63 59,60.8 59,58 C 59,55.2 56.8,53 54,53 Z" />
+    </group>
+</vector>
