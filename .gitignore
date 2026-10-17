@@ -13,8 +13,8 @@ android/.gradle/
 android/app/build/
 android/local.properties
 android/.cxx/
+android/app/.cxx/
 android/.idea/
 *.apk
 *.aab
 *.iml
-
