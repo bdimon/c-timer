@@ -78,9 +78,9 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
   const isPlanModified = JSON.stringify(plan) !== lastSavedSnapshot;
 
   // Quick generator states
-  const [genCount, setGenCount] = useState(6);
-  const [genWork, setGenWork] = useState(30);
-  const [genRest, setGenRest] = useState(15);
+  const [genCount, setGenCount] = useState<number | string>(6);
+  const [genWork, setGenWork] = useState<number | string>(30);
+  const [genRest, setGenRest] = useState<number | string>(15);
 
   const calculateTotalSeconds = (): number => {
     let singleCycle = 0;
@@ -211,17 +211,35 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
     const defaultPrefix = isTabata 
       ? (language === 'en' ? 'Round' : 'Раунд')
       : (language === 'en' ? 'Set' : language === 'uk' ? 'Сет' : 'Сет');
-    const newSets: IntervalSet[] = Array.from({ length: genCount }).map((_, i) => ({
+    const rawCount = parseInt(String(genCount), 10);
+    if (isNaN(rawCount) || rawCount <= 0) {
+      notifySuccess(
+        language === 'en' 
+          ? 'Please specify at least 1 set' 
+          : language === 'uk' 
+          ? 'Вкажіть хоча б 1 сет' 
+          : 'Укажите количество сетов (минимум 1)'
+      );
+      return;
+    }
+    const safeCount = Math.min(64, Math.max(1, rawCount));
+    const work = Math.max(0, parseInt(String(genWork), 10) || 0);
+    const rest = Math.max(0, parseInt(String(genRest), 10) || 0);
+
+    const newSets: IntervalSet[] = Array.from({ length: safeCount }).map((_, i) => ({
       id: `batch-${Date.now()}-${i + 1}`,
       name: `${defaultPrefix} ${i + 1}`,
-      workSeconds: Math.max(0, genWork),
-      restSeconds: Math.max(0, genRest),
+      workSeconds: work,
+      restSeconds: rest,
     }));
     onChangePlan((prev) => ({
       ...prev,
       sets: newSets,
     }));
-    notifySuccess(`${t('editor_gen_btn')}: ${genCount}`);
+    setGenCount(safeCount);
+    setGenWork(work);
+    setGenRest(rest);
+    notifySuccess(`${t('editor_gen_btn')}: ${safeCount}`);
   };
 
   const notifySuccess = (msg: string) => {
@@ -514,6 +532,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
             min="0"
             max="120"
             value={plan.prepSeconds === 0 ? 0 : plan.prepSeconds}
+            onFocus={(e) => e.target.select()}
             onChange={(e) => {
               const val = parseInt(e.target.value, 10);
               onChangePlan((p) => ({ ...p, prepSeconds: isNaN(val) ? 0 : Math.max(0, val) }));
@@ -533,6 +552,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
               min="1"
               max="20"
               value={plan.cycles}
+              onFocus={(e) => e.target.select()}
               onChange={(e) => {
                 const val = parseInt(e.target.value, 10);
                 onChangePlan((p) => ({ ...p, cycles: isNaN(val) ? 1 : Math.max(1, val) }));
@@ -575,6 +595,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
               min="0"
               max="600"
               value={plan.cycleRestSeconds === 0 ? 0 : plan.cycleRestSeconds}
+              onFocus={(e) => e.target.select()}
               onChange={(e) => {
                 const val = parseInt(e.target.value, 10);
                 onChangePlan((p) => ({
@@ -607,14 +628,78 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
         <div className="flex flex-wrap items-center gap-3 text-xs">
           <div className="flex items-center gap-1.5">
             <span className="text-zinc-400">{t('editor_gen_sets_label')}</span>
-            <input
-              type="number"
-              min="1"
-              max="50"
-              value={genCount}
-              onChange={(e) => setGenCount(Math.max(1, parseInt(e.target.value, 10) || 1))}
-              className="w-14 bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1 text-center text-white"
-            />
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setGenCount((prev) => Math.max(0, (parseInt(String(prev), 10) || 0) - 1))}
+                className="w-6 h-6 rounded bg-zinc-950 hover:bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white transition-colors text-xs font-bold select-none"
+                title="-1"
+              >
+                -
+              </button>
+              <input
+                type="number"
+                min="0"
+                max="64"
+                value={genCount}
+                onFocus={(e) => e.target.select()}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleGenerateBatch();
+                }}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === '') {
+                    setGenCount('');
+                    return;
+                  }
+                  const num = parseInt(val, 10);
+                  if (!isNaN(num)) {
+                    setGenCount(Math.max(0, Math.min(64, num)));
+                  }
+                }}
+                onBlur={() => {
+                  if (genCount === '') {
+                    setGenCount(0);
+                  }
+                }}
+                className="w-14 bg-zinc-950 border border-zinc-700 focus:border-emerald-500 rounded-lg px-2 py-1 text-center text-white font-mono text-xs focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => setGenCount((prev) => Math.min(64, (parseInt(String(prev), 10) || 0) + 1))}
+                className="w-6 h-6 rounded bg-zinc-950 hover:bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white transition-colors text-xs font-bold select-none"
+                title="+1"
+              >
+                +
+              </button>
+              {Number(genCount) > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setGenCount(0)}
+                  className="px-1.5 py-1 rounded bg-zinc-950 hover:bg-rose-950/40 text-[10px] text-zinc-400 hover:text-rose-300 border border-zinc-800 transition-colors font-mono"
+                  title="0 (сбросить в 0)"
+                >
+                  0
+                </button>
+              )}
+            </div>
+            {/* Quick sets selection pills */}
+            <div className="flex items-center gap-1 ml-1 flex-wrap">
+              {[4, 6, 8, 10, 12].map((cnt) => (
+                <button
+                  key={cnt}
+                  type="button"
+                  onClick={() => setGenCount(cnt)}
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-mono transition-colors ${
+                    Number(genCount) === cnt
+                      ? 'bg-emerald-500 text-zinc-950 font-bold'
+                      : 'bg-zinc-950 hover:bg-zinc-800 text-zinc-400 border border-zinc-800'
+                  }`}
+                >
+                  {cnt}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="flex items-center gap-1.5">
@@ -624,14 +709,30 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
               min="0"
               max="600"
               value={genWork}
-              onChange={(e) => {
-                const v = parseInt(e.target.value, 10);
-                setGenWork(isNaN(v) ? 0 : Math.max(0, v));
+              onFocus={(e) => e.target.select()}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleGenerateBatch();
               }}
-              className="w-16 bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1 text-center text-white font-mono"
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === '') {
+                  setGenWork('');
+                  return;
+                }
+                const v = parseInt(val, 10);
+                if (!isNaN(v)) {
+                  setGenWork(Math.max(0, Math.min(600, v)));
+                }
+              }}
+              onBlur={() => {
+                if (genWork === '') {
+                  setGenWork(0);
+                }
+              }}
+              className="w-16 bg-zinc-950 border border-zinc-700 focus:border-emerald-500 rounded-lg px-2 py-1 text-center text-white font-mono text-xs focus:outline-none"
             />
             <span className="text-zinc-500 text-[11px]">{t('unit_sec')}</span>
-            {genWork > 0 ? (
+            {Number(genWork) > 0 ? (
               <button
                 type="button"
                 onClick={() => setGenWork(0)}
@@ -658,14 +759,30 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
               min="0"
               max="600"
               value={genRest}
-              onChange={(e) => {
-                const v = parseInt(e.target.value, 10);
-                setGenRest(isNaN(v) ? 0 : Math.max(0, v));
+              onFocus={(e) => e.target.select()}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleGenerateBatch();
               }}
-              className="w-16 bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1 text-center text-white font-mono"
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === '') {
+                  setGenRest('');
+                  return;
+                }
+                const v = parseInt(val, 10);
+                if (!isNaN(v)) {
+                  setGenRest(Math.max(0, Math.min(600, v)));
+                }
+              }}
+              onBlur={() => {
+                if (genRest === '') {
+                  setGenRest(0);
+                }
+              }}
+              className="w-16 bg-zinc-950 border border-zinc-700 focus:border-cyan-500 rounded-lg px-2 py-1 text-center text-white font-mono text-xs focus:outline-none"
             />
             <span className="text-zinc-500 text-[11px]">{t('unit_sec')}</span>
-            {genRest > 0 ? (
+            {Number(genRest) > 0 ? (
               <button
                 type="button"
                 onClick={() => setGenRest(0)}
@@ -687,7 +804,12 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
 
           <button
             onClick={handleGenerateBatch}
-            className="px-3.5 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs transition-colors"
+            disabled={!Number(genCount) || Number(genCount) <= 0}
+            className={`px-3.5 py-1.5 rounded-lg font-bold text-xs transition-colors ${
+              !Number(genCount) || Number(genCount) <= 0
+                ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-700/60'
+                : 'bg-emerald-500 hover:bg-emerald-400 text-zinc-950 shadow-md shadow-emerald-500/20'
+            }`}
           >
             {t('editor_gen_btn')}
           </button>
@@ -875,6 +997,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                         min="0"
                         max="3600"
                         value={set.workSeconds === 0 ? 0 : set.workSeconds}
+                        onFocus={(e) => e.target.select()}
                         onChange={(e) => {
                           const val = parseInt(e.target.value, 10);
                           handleUpdateSet(idx, {
@@ -981,6 +1104,7 @@ export const WorkoutEditor: React.FC<WorkoutEditorProps> = ({
                         min="0"
                         max="3600"
                         value={set.restSeconds === 0 ? 0 : set.restSeconds}
+                        onFocus={(e) => e.target.select()}
                         onChange={(e) => {
                           const val = parseInt(e.target.value, 10);
                           handleUpdateSet(idx, {
