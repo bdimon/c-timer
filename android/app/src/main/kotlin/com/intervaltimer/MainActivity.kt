@@ -245,87 +245,117 @@ fun TopBarHeader(
     onScreenChange: (String) -> Unit,
     onOpenSync: () -> Unit
 ) {
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(Color(0xFF0A0F1D))
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+            .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        Column {
-            Text(
-                text = "INTERVAL TIMER C",
-                color = Color(0xFF10B981),
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.5.sp
-            )
-            Text(
-                text = "NDK Core v2.0",
-                color = Color(0xFF64748B),
-                fontSize = 9.sp,
-                fontFamily = FontFamily.Monospace
-            )
+        // Window Title & Horizontal "Импорт" Button
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Shortened App Title as Window Header
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "C-Timer",
+                    color = Color.White,
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 0.5.sp
+                )
+                Box(
+                    modifier = Modifier
+                        .background(Color(0xFF10B981).copy(alpha = 0.16f), RoundedCornerShape(6.dp))
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = "NDK Core",
+                        color = Color(0xFF10B981),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Monospace
+                    )
+                }
+            }
+
+            // Horizontal Import Button
+            FilledTonalButton(
+                onClick = onOpenSync,
+                shape = RoundedCornerShape(10.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                colors = ButtonDefaults.filledTonalButtonColors(
+                    containerColor = Color(0xFF1E293B),
+                    contentColor = Color(0xFF38BDF8)
+                )
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    ImportMnemonic(color = Color(0xFF38BDF8))
+                    Text(
+                        text = "Импорт",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
         }
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         // Screen Switcher Tabs
         Row(
             modifier = Modifier
+                .fillMaxWidth()
                 .background(Color(0xFF1E293B), RoundedCornerShape(12.dp))
                 .padding(3.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
+                    .weight(1f)
                     .background(
                         if (activeScreen == "timer") Color(0xFF10B981) else Color.Transparent,
                         RoundedCornerShape(9.dp)
                     )
                     .clickable { onScreenChange("timer") }
-                    .padding(horizontal = 12.dp, vertical = 6.dp)
+                    .padding(vertical = 8.dp),
+                contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = "Таймер",
                     color = if (activeScreen == "timer") Color(0xFF0F172A) else Color(0xFF94A3B8),
-                    fontSize = 12.sp,
+                    fontSize = 13.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
 
             Box(
                 modifier = Modifier
+                    .weight(1f)
                     .background(
                         if (activeScreen == "plans") Color(0xFF10B981) else Color.Transparent,
                         RoundedCornerShape(9.dp)
                     )
                     .clickable { onScreenChange("plans") }
-                    .padding(horizontal = 12.dp, vertical = 6.dp)
+                    .padding(vertical = 8.dp),
+                contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = "Планы",
                     color = if (activeScreen == "plans") Color(0xFF0F172A) else Color(0xFF94A3B8),
-                    fontSize = 12.sp,
+                    fontSize = 13.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
-        }
-
-        // Sync with Web Button
-        FilledTonalButton(
-            onClick = onOpenSync,
-            shape = RoundedCornerShape(10.dp),
-            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-            colors = ButtonDefaults.filledTonalButtonColors(
-                containerColor = Color(0xFF1E293B),
-                contentColor = Color(0xFF38BDF8)
-            )
-        ) {
-            Text(
-                text = "Web Sync",
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold
-            )
         }
     }
 }
@@ -533,7 +563,7 @@ fun SyncWithWebDialog(
         ) {
             Column(modifier = Modifier.padding(20.dp)) {
                 Text(
-                    text = "Синхронизация с Web",
+                    text = "Импорт тренировки",
                     color = Color.White,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold
@@ -818,3 +848,38 @@ fun ResetMnemonic(modifier: Modifier = Modifier, color: Color = Color.White) {
         drawPath(arrowPath, color)
     }
 }
+
+@Composable
+fun ImportMnemonic(modifier: Modifier = Modifier, color: Color = Color(0xFF38BDF8)) {
+    Canvas(modifier = modifier.size(15.dp)) {
+        val w = size.width
+        val h = size.height
+
+        // Downward arrow line
+        drawLine(
+            color = color,
+            start = Offset(w * 0.5f, h * 0.12f),
+            end = Offset(w * 0.5f, h * 0.58f),
+            strokeWidth = 2.dp.toPx(),
+            cap = StrokeCap.Round
+        )
+
+        // Arrowhead
+        val arrowHead = Path().apply {
+            moveTo(w * 0.26f, h * 0.38f)
+            lineTo(w * 0.5f, h * 0.62f)
+            lineTo(w * 0.74f, h * 0.38f)
+        }
+        drawPath(arrowHead, color, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round))
+
+        // Tray bracket
+        val tray = Path().apply {
+            moveTo(w * 0.18f, h * 0.64f)
+            lineTo(w * 0.18f, h * 0.88f)
+            lineTo(w * 0.82f, h * 0.88f)
+            lineTo(w * 0.82f, h * 0.64f)
+        }
+        drawPath(tray, color, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round))
+    }
+}
+
