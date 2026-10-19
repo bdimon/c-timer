@@ -6,6 +6,7 @@ plugins {
 }
 
 android {
+    ndkVersion = "30.0.16248370"
     namespace = "com.intervaltimer"
     compileSdk = 35
 
